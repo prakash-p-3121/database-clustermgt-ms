@@ -1,3 +1,5 @@
+filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
+filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=
 github.com/bytedance/sonic v1.10.0-rc/go.mod h1:ElCzW+ufi8qKqNW0FY314xriJhyJhuoJ3gFZdAHF7NM=
 github.com/bytedance/sonic v1.11.2 h1:ywfwo0a/3j9HR8wsYGWsIWl2mvRsI950HyoxiBERw5A=
@@ -23,6 +25,8 @@ github.com/go-playground/universal-translator v0.18.1 h1:Bcnm0ZwsGyWbCzImXv+pAJn
 github.com/go-playground/universal-translator v0.18.1/go.mod h1:xekY+UJKNuX9WP91TpwSH2VMlDf28Uj24BCp08ZFTUY=
 github.com/go-playground/validator/v10 v10.19.0 h1:ol+5Fu+cSq9JD7SoSqe04GMI92cbn0+wvQ3bZ8b/AU4=
 github.com/go-playground/validator/v10 v10.19.0/go.mod h1:dbuPbCMFw/DrkbEynArYaCwl3amGuJotoKCe95atGMM=
+github.com/go-sql-driver/mysql v1.8.0 h1:UtktXaU2Nb64z/pLiGIxY4431SJ4/dR5cjMmlVHgnT4=
+github.com/go-sql-driver/mysql v1.8.0/go.mod h1:wEBSXgmK//2ZFJyE+qWnIsVGmvmEKlqwuVSjsCm7DZg=
 github.com/goccy/go-json v0.10.2 h1:CrxCmQqYDkv1z7lO7Wbh2HN93uovUHgrECaO5ZrCXAU=
 github.com/goccy/go-json v0.10.2/go.mod h1:6MelG93GURQebXPDq3khkgXZkazVtN9CRI+MGFi0w8I=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
@@ -46,8 +50,12 @@ github.com/pelletier/go-toml/v2 v2.1.1/go.mod h1:tJU2Z3ZkXwnxa4DPO899bsyIoywizdU
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prakash-p-3121/errorlib v0.0.7 h1:0sTHQfcj6IL0Az1tNQa3Uu7RL7/jdC/sVzqvrJCTVY0=
 github.com/prakash-p-3121/errorlib v0.0.7/go.mod h1:9q5QI6qRlpLoHIvRLmQ58vYnj7bYt/qYoikNrRGzT/I=
+github.com/prakash-p-3121/mysqllib v0.0.12 h1:x8TKYtBVZt8JLjp6yfDTJQ725TM475zM8GSGJ9PeSXk=
+github.com/prakash-p-3121/mysqllib v0.0.12/go.mod h1:oBQbOxVWB3b96bwkmgvEt/X+Df2+MqiW1Ljl1gamCYQ=
 github.com/prakash-p-3121/restlib v0.0.4 h1:kg7VKoEKQcBFFiK2BUW5O2WCfHy+x/I1evI/eYMPxho=
 github.com/prakash-p-3121/restlib v0.0.4/go.mod h1:wTRmstsrR1f9etIxnXUjSFKnJqc9c7+Wmh1qzLc5o7o=
+github.com/prakash-p-3121/tomllib v0.0.2 h1:LpYZpFnF6HLXwpxuDVyiRymH/Ep2EekuO4PGWlFJr6U=
+github.com/prakash-p-3121/tomllib v0.0.2/go.mod h1:qwh2fakMjniGTfHxuysZIX2VGR7Arg+A9gTvOgHjewI=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=

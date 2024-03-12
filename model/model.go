@@ -11,12 +11,12 @@ type UserIDLookUpResp struct {
 }
 
 type DatabaseShard struct {
-	ID        *uint64 `json:"id"` //shardID
-	IPAddress *string `json:"string"`
+	ID        *int64  `json:"id"` //shardID
+	IPAddress *string `json:"ip-address"`
 }
 
 type DatabaseCluster struct {
-	ID        *uint64 `json:"id"` // clusterID
+	ID        *int64  `json:"id"` // clusterID
 	TableName *string `json:"table-name"`
-	ShardSize *uint64 `json:"shard-size"`
+	ShardSize *int64  `json:"shard-size"`
 }

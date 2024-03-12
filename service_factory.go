@@ -9,3 +9,11 @@ import (
 func NewUserDirectoryService(databaseConnection *sql.DB) service.UserDirectoryService {
 	return &service_impl.UserDirectoryServiceImpl{DatabaseConnection: databaseConnection}
 }
+
+func NewDatabaseShardService(databaseConnection *sql.DB) service.DatabaseShardService {
+	return &service_impl.DatabaseShardServiceImpl{DatabaseConnection: databaseConnection}
+}
+
+func NewDatabaseClusterService(databaseConnection *sql.DB) service.DatabaseClusterService {
+	return &service_impl.DatabaseClusterServiceImpl{DatabaseConnection: databaseConnection}
+}

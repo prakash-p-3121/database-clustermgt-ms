@@ -10,15 +10,14 @@ type UserDirectoryService interface {
 	LookUpByUserID(userID string) (*model.UserIDLookUpResp, errorlib.AppError)
 }
 
-type ShardServerService interface {
+type DatabaseShardService interface {
 	CreateShard(ipAddr string) (*model.DatabaseShard, errorlib.AppError)
-	ReadShardByID(id uint64) (*model.DatabaseShard, errorlib.AppError)
-	UpdateShard(id uint64, ipAddr string) (uint, errorlib.AppError) /* returns affectedRows, AppError  */
+	ReadShardByID(id int64) (*model.DatabaseShard, errorlib.AppError)
+	UpdateShard(id int64, ipAddr string) (int64, errorlib.AppError) /* returns affectedRows, AppError  */
 }
 
-type ClusterService interface {
-	CreateCluster(tableName string, shardList []*model.DatabaseShard) (*model.DatabaseShard, errorlib.AppError)
-	//UpdateCurrentWriteCluster(tableName string, clusterID uint64) (uint, errorlib.AppError)
-	ReadClusterByID(id uint64) (*model.DatabaseCluster, errorlib.AppError)
+type DatabaseClusterService interface {
+	CreateCluster(tableName string, shardList []*model.DatabaseShard) (*model.DatabaseCluster, errorlib.AppError)
+	ReadClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError)
 	ReadCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError)
 }
