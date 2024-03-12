@@ -6,8 +6,10 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/prakash-p-3121/directory-database-lib/model"
+	shardRepo "github.com/prakash-p-3121/directory-database-lib/repository/database_shard_repository"
 	"github.com/prakash-p-3121/errorlib"
 	"github.com/prakash-p-3121/mysqllib"
+	"strconv"
 )
 
 type DatabaseClusterRepositoryImpl struct {
@@ -66,8 +68,7 @@ func (repository *DatabaseClusterRepositoryImpl) createClusterToShardRelationshi
 	shardPtrList []*model.DatabaseShard) error {
 
 	for _, shardPtr := range shardPtrList {
-		qry := `INSERT INTO cluster_to_shard_relationships (cluster_id, shard_id) VALUES (cluster_id, shard_id)
-				ON DUPLICATE KEY UPDATE cluster_id=VALUES(cluster_id), shard_id=VALUES(shard_id);`
+		qry := `UPDATE shards SET cluster_id=? WHEE id=?;`
 		_, err := tx.Exec(qry, clusterPtr.ID, shardPtr.ID)
 		if err != nil {
 			return err
@@ -112,38 +113,19 @@ func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteShardByTableNam
 	if err != nil {
 		return nil, err
 	}
-	shardList, err := repository.FindRelatedShards(cluster)
+	shardRepoInst := shardRepo.NewDatabaseShardRepository(repository.DatabaseConnection)
+	shardList, err := shardRepoInst.FindShardsByClusterID(*cluster.ID)
 	if err != nil {
 		return nil, err
 	}
 	if len(shardList) == 0 {
-		return nil, err
+		return nil, errorlib.NewNotFoundError("shards-not-found-for-cluster_id=" + strconv.FormatInt(*cluster.ID, 10))
 	}
 	shard, err := repository.FindWriteShard(shardList, id)
 	if err != nil {
 		return nil, err
 	}
 	return shard, nil
-}
-
-func (repository *DatabaseClusterRepositoryImpl) FindRelatedShards(cluster *model.DatabaseCluster) ([]*model.DatabaseShard, errorlib.AppError) {
-	db := repository.DatabaseConnection
-	qry := `SELECT id, ip_address FROM database_shards A INNER JOIN
-    			clusters_to_shards_relationships B ON B.cluster_id = ? AND B.shard_id = A.id ORDER BY id ASC;`
-	rows, err := db.Query(qry, cluster.ID)
-	if err != nil {
-		return nil, errorlib.NewInternalServerError(err.Error())
-	}
-	shardList := make([]*model.DatabaseShard, 0)
-	for rows.Next() {
-		var shard model.DatabaseShard
-		err := rows.Scan(&shard.ID, &shard.IPAddress)
-		if err != nil {
-			return nil, errorlib.NewInternalServerError(err.Error())
-		}
-		shardList = append(shardList, &shard)
-	}
-	return shardList, nil
 }
 
 func (repository *DatabaseClusterRepositoryImpl) FindWriteShard(shardList []*model.DatabaseShard, id string) (*model.DatabaseShard, errorlib.AppError) {

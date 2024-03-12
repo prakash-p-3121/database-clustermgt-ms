@@ -1,4 +1,4 @@
-package repository
+package user_directory_repository
 
 import (
 	"github.com/prakash-p-3121/directory-database-lib/model"

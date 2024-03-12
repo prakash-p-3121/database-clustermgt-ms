@@ -1,4 +1,4 @@
-package repository
+package database_cluster_repository
 
 import (
 	"github.com/prakash-p-3121/directory-database-lib/model"
