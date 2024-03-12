@@ -22,7 +22,13 @@ func (service *DatabaseClusterServiceImpl) ReadClusterByID(id int64) (*model.Dat
 	return clusterRepo.ReadClusterByID(id)
 }
 
-func (service *DatabaseClusterServiceImpl) ReadCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
+func (service *DatabaseClusterServiceImpl) FindCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
 	clusterRepo := repository.NewDatabaseClusterRepository(service.DatabaseConnection)
-	return clusterRepo.ReadCurrentWriteClusterByTableName(tableName)
+	return clusterRepo.FindCurrentWriteClusterByTableName(tableName)
+}
+
+func (service *DatabaseClusterServiceImpl) FindCurrentWriteShardByTableName(tableName string,
+	id string) (*model.DatabaseShard, errorlib.AppError) {
+	clusterRepo := repository.NewDatabaseClusterRepository(service.DatabaseConnection)
+	return clusterRepo.FindCurrentWriteShardByTableName(tableName, id)
 }

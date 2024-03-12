@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"crypto/md5"
 	"database/sql"
 	"errors"
 	"github.com/prakash-p-3121/directory-database-lib/model"
@@ -90,7 +91,7 @@ func (repository *DatabaseClusterRepositoryImpl) ReadClusterByID(id int64) (*mod
 	return &cluster, nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) ReadCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
+func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
 	qry := `SELECT id, table_name, shard_size FROM database_clusters A INNER JOIN current_write_clusters B ON B.table_name = ? AND B.cluster_id = A.id ;`
 	row := db.QueryRow(qry, tableName)
@@ -103,4 +104,64 @@ func (repository *DatabaseClusterRepositoryImpl) ReadCurrentWriteClusterByTableN
 		return nil, errorlib.NewInternalServerError(err.Error())
 	}
 	return &cluster, nil
+}
+
+func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteShardByTableName(tableName string,
+	id string) (*model.DatabaseShard, errorlib.AppError) {
+	cluster, err := repository.FindCurrentWriteClusterByTableName(tableName)
+	if err != nil {
+		return nil, err
+	}
+	shardList, err := repository.FindRelatedShards(cluster)
+	if err != nil {
+		return nil, err
+	}
+	if len(shardList) == 0 {
+		return nil, err
+	}
+	shard, err := repository.FindWriteShard(shardList, id)
+	if err != nil {
+		return nil, err
+	}
+	return shard, nil
+}
+
+func (repository *DatabaseClusterRepositoryImpl) FindRelatedShards(cluster *model.DatabaseCluster) ([]*model.DatabaseShard, errorlib.AppError) {
+	db := repository.DatabaseConnection
+	qry := `SELECT id, ip_address FROM database_shards A INNER JOIN
+    			clusters_to_shards_relationships B ON B.cluster_id = ? AND B.shard_id = A.id ORDER BY id ASC;`
+	rows, err := db.Query(qry, cluster.ID)
+	if err != nil {
+		return nil, errorlib.NewInternalServerError(err.Error())
+	}
+	shardList := make([]*model.DatabaseShard, 0)
+	for rows.Next() {
+		var shard model.DatabaseShard
+		err := rows.Scan(&shard.ID, &shard.IPAddress)
+		if err != nil {
+			return nil, errorlib.NewInternalServerError(err.Error())
+		}
+		shardList = append(shardList, &shard)
+	}
+	return shardList, nil
+}
+
+func (repository *DatabaseClusterRepositoryImpl) FindWriteShard(shardList []*model.DatabaseShard, id string) (*model.DatabaseShard, errorlib.AppError) {
+	md5HashInt64 := repository.computeMD5Hash(id)
+	shardNo := int(md5HashInt64 % int64(len(shardList)))
+	return shardList[shardNo], nil
+}
+
+func (repository *DatabaseClusterRepositoryImpl) computeMD5Hash(id string) int64 {
+	hash := md5.Sum([]byte(id))
+
+	var hashInt64 int64
+	for i := range hash {
+		hashInt64 = (hashInt64 << 8) | int64(hash[i])
+	}
+
+	if hashInt64 < 0 {
+		hashInt64 = -hashInt64
+	}
+	return hashInt64
 }
