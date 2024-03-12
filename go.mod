@@ -1,4 +1,4 @@
-module github.com/prakash-p-3121/databaes-clustermgt-ms
+module github.com/prakash-p-3121/database-clustermgt-ms
 
 go 1.22.1
 
