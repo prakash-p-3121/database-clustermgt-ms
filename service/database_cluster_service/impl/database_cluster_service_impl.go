@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"fmt"
 	model "github.com/prakash-p-3121/database-clustermgt-model"
 	"github.com/prakash-p-3121/database-clustermgt-ms/repository/database_cluster_repository"
 	"github.com/prakash-p-3121/errorlib"
@@ -20,7 +19,7 @@ func (service *DatabaseClusterServiceImpl) CreateCluster(req *model.DatabaseClus
 	if appErr != nil {
 		return nil, appErr
 	}
-	fmt.Println("asdasdasddsaTEST")
+
 	clusterRepo := service.DatabaseClusterRepository
 	return clusterRepo.CreateCluster(*req.TableName, req.ShardIDList)
 }
@@ -39,4 +38,9 @@ func (service *DatabaseClusterServiceImpl) FindCurrentWriteShardByTableName(tabl
 	id string) (*model.DatabaseShard, errorlib.AppError) {
 	clusterRepo := service.DatabaseClusterRepository
 	return clusterRepo.FindCurrentWriteShardByTableName(tableName, id)
+}
+
+func (service *DatabaseClusterServiceImpl) FindAllShardsByTableName(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {
+	clusterRepo := service.DatabaseClusterRepository
+	return clusterRepo.FindAllShardsByTableName(tableName)
 }

@@ -10,4 +10,5 @@ type DatabaseClusterRepository interface {
 	FindClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError)
 	FindCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError)
 	FindCurrentWriteShardByTableName(tableName, id string) (*model.DatabaseShard, errorlib.AppError)
+	FindAllShardsByTableName(tableName string) ([]*model.DatabaseShard, errorlib.AppError)
 }

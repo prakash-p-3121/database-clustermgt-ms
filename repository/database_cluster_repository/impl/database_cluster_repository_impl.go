@@ -159,3 +159,32 @@ func (repository *DatabaseClusterRepositoryImpl) computeMD5Hash(id string) int64
 	}
 	return hashInt64
 }
+
+func (repository *DatabaseClusterRepositoryImpl) FindAllShardsByTableName(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {
+	qry := `SELECT A.id, A.ip_address, A.cluster_id, A.port, A.user_name, A.password, A.database_name  FROM database_shards A 
+				INNER JOIN database_clusters B ON B.table_name = ? AND A.cluster_id = B.id ORDER BY A.id desc;
+           `
+	db := repository.DatabaseConnection
+	rows, err := db.Query(qry, tableName)
+	if err != nil {
+		return nil, errorlib.NewInternalServerError(err.Error())
+	}
+	shardPtrList := make([]*model.DatabaseShard, 0)
+	for rows.Next() {
+		var shard model.DatabaseShard
+		err := rows.Scan(
+			&shard.ID,
+			&shard.IPAddress,
+			&shard.ClusterID,
+			&shard.Port,
+			&shard.UserName,
+			&shard.Password,
+			&shard.DatabaseName,
+		)
+		if err != nil {
+			return nil, errorlib.NewInternalServerError(err.Error())
+		}
+		shardPtrList = append(shardPtrList, &shard)
+	}
+	return shardPtrList, nil
+}
