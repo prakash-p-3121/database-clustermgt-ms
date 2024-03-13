@@ -1,7 +1,7 @@
 package database_cluster_service
 
 import (
-	"github.com/prakash-p-3121/directory-database-lib/model"
+	model "github.com/prakash-p-3121/database-clustermgt-model"
 	"github.com/prakash-p-3121/errorlib"
 )
 

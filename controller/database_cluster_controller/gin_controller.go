@@ -1,4 +1,4 @@
-package database_cluster_service_controller
+package database_cluster_controller
 
 import "github.com/gin-gonic/gin"
 

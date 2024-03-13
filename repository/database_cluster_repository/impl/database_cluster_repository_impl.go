@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"errors"
-	"github.com/prakash-p-3121/database-clustermgt-ms/model"
+	model "github.com/prakash-p-3121/database-clustermgt-model"
 	shardRepo "github.com/prakash-p-3121/database-clustermgt-ms/repository/database_shard_repository"
 	"github.com/prakash-p-3121/errorlib"
 	"github.com/prakash-p-3121/mysqllib"
@@ -77,7 +77,7 @@ func (repository *DatabaseClusterRepositoryImpl) createClusterToShardRelationshi
 	return nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) ReadClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError) {
+func (repository *DatabaseClusterRepositoryImpl) FindClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
 	qry := `SELECT id, table_name, shard_size FROM database_clusters where id=?;`
 	row := db.QueryRow(qry, id)

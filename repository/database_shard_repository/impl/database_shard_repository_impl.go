@@ -3,7 +3,7 @@ package impl
 import (
 	"database/sql"
 	"errors"
-	"github.com/prakash-p-3121/database-clustermgt-ms/model"
+	model "github.com/prakash-p-3121/database-clustermgt-model"
 	"github.com/prakash-p-3121/errorlib"
 	"strconv"
 )

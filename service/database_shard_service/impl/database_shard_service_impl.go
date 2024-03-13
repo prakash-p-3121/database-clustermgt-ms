@@ -1,8 +1,8 @@
 package impl
 
 import (
-	"github.com/prakash-p-3121/directory-database-lib/model"
-	"github.com/prakash-p-3121/directory-database-lib/repository/database_shard_repository"
+	model "github.com/prakash-p-3121/database-clustermgt-model"
+	"github.com/prakash-p-3121/database-clustermgt-ms/repository/database_shard_repository"
 	"github.com/prakash-p-3121/errorlib"
 )
 

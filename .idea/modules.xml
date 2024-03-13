@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/directory-database-lib.iml" filepath="$PROJECT_DIR$/.idea/directory-database-lib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../database-clustermgt-ms/.idea/database-clustermgt-ms.iml" filepath="$PROJECT_DIR$/../database-clustermgt-ms/.idea/database-clustermgt-ms.iml" />
     </modules>
   </component>
 </project>

@@ -1,8 +1,8 @@
 package impl
 
 import (
-	"github.com/prakash-p-3121/directory-database-lib/model"
-	"github.com/prakash-p-3121/directory-database-lib/repository/database_cluster_repository"
+	model "github.com/prakash-p-3121/database-clustermgt-model"
+	"github.com/prakash-p-3121/database-clustermgt-ms/repository/database_cluster_repository"
 	"github.com/prakash-p-3121/errorlib"
 )
 
@@ -18,7 +18,7 @@ func (service *DatabaseClusterServiceImpl) CreateCluster(tableName string,
 
 func (service *DatabaseClusterServiceImpl) ReadClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError) {
 	clusterRepo := service.DatabaseClusterRepository
-	return clusterRepo.ReadClusterByID(id)
+	return clusterRepo.FindClusterByID(id)
 }
 
 func (service *DatabaseClusterServiceImpl) FindCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {

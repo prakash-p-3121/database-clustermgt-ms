@@ -1,7 +1,7 @@
 package impl
 
 import (
-	"github.com/prakash-p-3121/directory-database-lib/service/database_cluster_service"
+	"github.com/prakash-p-3121/database-clustermgt-ms/service/database_cluster_service"
 	"github.com/prakash-p-3121/errorlib"
 	"github.com/prakash-p-3121/restlib"
 	"strings"
