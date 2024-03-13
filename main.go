@@ -28,7 +28,7 @@ func main() {
 	routerGroup.POST("/database-shard", database_shard_controller.CreateShard)
 	routerGroup.POST("/database-cluster", database_cluster_controller.CreateCluster)
 	routerGroup.GET("/find-current/write-shard", database_cluster_controller.FindCurrentWriteShard)
-	routerGroup.GET("/find-all/shards/by/table-name", database_cluster_controller.FindAllShardsByTableName)
+	routerGroup.GET("/find-all/shards/by/table", database_cluster_controller.FindAllShardsByTable)
 
 	err = router.Run("127.0.0.1:3000")
 	if err != nil {

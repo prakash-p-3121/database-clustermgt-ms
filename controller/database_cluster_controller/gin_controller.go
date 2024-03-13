@@ -17,8 +17,8 @@ func CreateCluster(ctx *gin.Context) {
 	controller.CreateCluster(ginRestCtx)
 }
 
-func FindAllShardsByTableName(ctx *gin.Context) {
+func FindAllShardsByTable(ctx *gin.Context) {
 	ginRestCtx := restlib.NewGinRestContext(ctx)
 	controller := NewDatabaseClusterController()
-	controller.FindAllShardsByTableName(ginRestCtx)
+	controller.FindAllShardsByTable(ginRestCtx)
 }

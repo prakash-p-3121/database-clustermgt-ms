@@ -69,7 +69,7 @@ func (controller *DatabaseClusterControllerImpl) FindCurrentWriteShard(restCtx r
 	restlib.OkResponse(ctx, *shardPtr)
 }
 
-func (controller *DatabaseClusterControllerImpl) FindAllShardsByTableName(restCtx restlib.RestContext) {
+func (controller *DatabaseClusterControllerImpl) FindAllShardsByTable(restCtx restlib.RestContext) {
 	ginRestCtx, ok := restCtx.(*restlib.GinRestContext)
 	if !ok {
 		internalServerErr := errorlib.NewInternalServerError("Expected GinRestContext")
@@ -85,7 +85,7 @@ func (controller *DatabaseClusterControllerImpl) FindAllShardsByTableName(restCt
 		return
 	}
 
-	shardPtrList, appErr := controller.DatabaseClusterService.FindAllShardsByTableName(tableName)
+	shardPtrList, appErr := controller.DatabaseClusterService.FindAllShardsByTable(tableName)
 	if appErr != nil {
 		appErr.SendRestResponse(ctx)
 		return

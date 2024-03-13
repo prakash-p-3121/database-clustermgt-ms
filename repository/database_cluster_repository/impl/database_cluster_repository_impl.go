@@ -160,9 +160,9 @@ func (repository *DatabaseClusterRepositoryImpl) computeMD5Hash(id string) int64
 	return hashInt64
 }
 
-func (repository *DatabaseClusterRepositoryImpl) FindAllShardsByTableName(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {
+func (repository *DatabaseClusterRepositoryImpl) FindAllShardsByTable(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {
 	qry := `SELECT A.id, A.ip_address, A.cluster_id, A.port, A.user_name, A.password, A.database_name  FROM database_shards A 
-				INNER JOIN database_clusters B ON B.table_name = ? AND A.cluster_id = B.id ORDER BY A.id desc;
+				INNER JOIN database_clusters B ON B.table_name = ? AND A.cluster_id = B.id ORDER BY A.id ASC;
            `
 	db := repository.DatabaseConnection
 	rows, err := db.Query(qry, tableName)

@@ -40,7 +40,7 @@ func (service *DatabaseClusterServiceImpl) FindCurrentWriteShardByTableName(tabl
 	return clusterRepo.FindCurrentWriteShardByTableName(tableName, id)
 }
 
-func (service *DatabaseClusterServiceImpl) FindAllShardsByTableName(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {
+func (service *DatabaseClusterServiceImpl) FindAllShardsByTable(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {
 	clusterRepo := service.DatabaseClusterRepository
-	return clusterRepo.FindAllShardsByTableName(tableName)
+	return clusterRepo.FindAllShardsByTable(tableName)
 }

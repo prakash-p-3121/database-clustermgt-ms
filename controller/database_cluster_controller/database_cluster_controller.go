@@ -7,5 +7,5 @@ import (
 type DatabaseClusterController interface {
 	CreateCluster(restCtx restlib.RestContext)
 	FindCurrentWriteShard(restCtx restlib.RestContext)
-	FindAllShardsByTableName(restCtx restlib.RestContext)
+	FindAllShardsByTable(restCtx restlib.RestContext)
 }
