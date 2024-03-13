@@ -6,7 +6,7 @@ import (
 )
 
 type DatabaseShardRepository interface {
-	CreateShard(shard *model.DatabaseShard) (int64, errorlib.AppError)
+	CreateShard(shard *model.DatabaseShardCreateReq) (int64, errorlib.AppError)
 	FindShardByID(shardID int64) (*model.DatabaseShard, errorlib.AppError)
 	FindShardsByClusterID(clusterID int64) ([]*model.DatabaseShard, errorlib.AppError)
 }

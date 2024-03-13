@@ -5,11 +5,13 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"errors"
+	"fmt"
 	model "github.com/prakash-p-3121/database-clustermgt-model"
 	shardRepo "github.com/prakash-p-3121/database-clustermgt-ms/repository/database_shard_repository"
 	"github.com/prakash-p-3121/errorlib"
 	"github.com/prakash-p-3121/mysqllib"
 	"strconv"
+	"time"
 )
 
 type DatabaseClusterRepositoryImpl struct {
@@ -17,14 +19,14 @@ type DatabaseClusterRepositoryImpl struct {
 }
 
 func (repository *DatabaseClusterRepositoryImpl) CreateCluster(tableName string,
-	shardList []*model.DatabaseShard) (*model.DatabaseCluster, errorlib.AppError) {
+	shardIDList []int64) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, errorlib.NewInternalServerError(err.Error())
 	}
-	cluster, err := repository.createCluster(tx, tableName, shardList)
+	cluster, err := repository.createCluster(tx, tableName, shardIDList)
 	if err != nil {
 		return nil, errorlib.NewInternalServerError(mysqllib.RollbackTx(tx, err).Error())
 	}
@@ -36,10 +38,11 @@ func (repository *DatabaseClusterRepositoryImpl) CreateCluster(tableName string,
 }
 
 func (repository *DatabaseClusterRepositoryImpl) createCluster(tx *sql.Tx, tableName string,
-	shardList []*model.DatabaseShard) (*model.DatabaseCluster, error) {
-	shardSize := int64(len(shardList))
-	qry := `INSERT INTO database_clusters (table_name, shard_size) VALUES (?, ?);`
-	result, err := tx.Exec(qry, tableName, shardSize)
+	shardIDList []int64) (*model.DatabaseCluster, error) {
+	shardSize := int64(len(shardIDList))
+	createdAt := time.Now().UTC()
+	qry := `INSERT INTO database_clusters (table_name, shard_size, created_at, updated_at) VALUES (?, ?, ?, ?);`
+	result, err := tx.Exec(qry, tableName, shardSize, createdAt, createdAt)
 	if err != nil {
 		return nil, err
 	}
@@ -47,29 +50,30 @@ func (repository *DatabaseClusterRepositoryImpl) createCluster(tx *sql.Tx, table
 	if err != nil {
 		return nil, err
 	}
-
-	clusterPtr := &model.DatabaseCluster{ID: &clusterID, TableName: &tableName, ShardSize: &shardSize}
-	err = repository.createClusterToShardRelationship(tx, clusterPtr, shardList)
+	clusterPtr := &model.DatabaseCluster{ID: &clusterID, TableName: &tableName, ShardSize: &shardSize, CreatedAt: createdAt, UpdatedAt: createdAt}
+	err = repository.createClusterToShardRelationship(tx, clusterPtr, shardIDList)
 	if err != nil {
 		return nil, err
 	}
-
-	qry = `INSERT INTO current_write_clusters (table_name, cluster_id) VALUES (?,?) ON DUPLICATE KEY UPDATE 
-    			table_name=VALUES(table_name) AND cluster_id=VALUES(cluster_id);`
+	fmt.Println("ASASDASD")
+	qry = `INSERT INTO current_write_database_clusters (table_name, cluster_id) VALUES (?,?) ON DUPLICATE KEY UPDATE 
+    	   cluster_id=VALUES(cluster_id);`
 	_, err = tx.Exec(qry, tableName, clusterID)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("RFASDASD")
+
 	return clusterPtr, nil
 }
 
 func (repository *DatabaseClusterRepositoryImpl) createClusterToShardRelationship(tx *sql.Tx,
 	clusterPtr *model.DatabaseCluster,
-	shardPtrList []*model.DatabaseShard) error {
+	shardIDList []int64) error {
 
-	for _, shardPtr := range shardPtrList {
-		qry := `UPDATE shards SET cluster_id=? WHEE id=?;`
-		_, err := tx.Exec(qry, clusterPtr.ID, shardPtr.ID)
+	for _, shardID := range shardIDList {
+		qry := `UPDATE database_shards SET cluster_id=? WHERE id=?;`
+		_, err := tx.Exec(qry, clusterPtr.ID, shardID)
 		if err != nil {
 			return err
 		}
@@ -82,19 +86,24 @@ func (repository *DatabaseClusterRepositoryImpl) FindClusterByID(id int64) (*mod
 	qry := `SELECT id, table_name, shard_size FROM database_clusters where id=?;`
 	row := db.QueryRow(qry, id)
 	var cluster model.DatabaseCluster
+	fmt.Println("find cluster by id")
 	err := row.Scan(&cluster.ID, &cluster.TableName, &cluster.ShardSize)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errorlib.NewNotFoundError("cluster-id-not-found")
 	}
 	if err != nil {
+
+		fmt.Println("ASDASDASDASDSA")
 		return nil, errorlib.NewInternalServerError(err.Error())
 	}
+	fmt.Println("find cluster by id")
 	return &cluster, nil
 }
 
 func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
-	qry := `SELECT id, table_name, shard_size FROM database_clusters A INNER JOIN current_write_clusters B ON B.table_name = ? AND B.cluster_id = A.id ;`
+	fmt.Println("find write -cluster by table name")
+	qry := `SELECT A.id, A.table_name, A.shard_size  FROM database_clusters A INNER JOIN current_write_database_clusters B ON B.table_name = ? AND B.cluster_id = A.id ;`
 	row := db.QueryRow(qry, tableName)
 	var cluster model.DatabaseCluster
 	err := row.Scan(&cluster.ID, &cluster.TableName, &cluster.ShardSize)
@@ -102,6 +111,7 @@ func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteClusterByTableN
 		return nil, errorlib.NewNotFoundError("write-cluster-not-found-for-tableName=" + tableName)
 	}
 	if err != nil {
+		fmt.Println("AASDASD")
 		return nil, errorlib.NewInternalServerError(err.Error())
 	}
 	return &cluster, nil
@@ -116,11 +126,13 @@ func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteShardByTableNam
 	shardRepoInst := shardRepo.NewDatabaseShardRepository(repository.DatabaseConnection)
 	shardList, err := shardRepoInst.FindShardsByClusterID(*cluster.ID)
 	if err != nil {
+		fmt.Println("find-shards-by-cluster-id")
 		return nil, err
 	}
 	if len(shardList) == 0 {
 		return nil, errorlib.NewNotFoundError("shards-not-found-for-cluster_id=" + strconv.FormatInt(*cluster.ID, 10))
 	}
+	fmt.Println("find-current-write-shard-by-table-name")
 	shard, err := repository.FindWriteShard(shardList, id)
 	if err != nil {
 		return nil, err

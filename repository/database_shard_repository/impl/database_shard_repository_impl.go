@@ -1,8 +1,10 @@
 package impl
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	model "github.com/prakash-p-3121/database-clustermgt-model"
 	"github.com/prakash-p-3121/errorlib"
 	"strconv"
@@ -12,18 +14,20 @@ type DatabaseShardRepositoryImpl struct {
 	DatabaseConnection *sql.DB
 }
 
-func (repository *DatabaseShardRepositoryImpl) CreateShard(shardPtr *model.DatabaseShard) (int64, errorlib.AppError) {
+func (repository *DatabaseShardRepositoryImpl) CreateShard(shardPtr *model.DatabaseShardCreateReq) (int64, errorlib.AppError) {
 	db := repository.DatabaseConnection
-	qry := `INSERT INTO database_shards  (ip_address, cluster_id, port, user_name, password, database_name) VALUES (?,?,?,?,?,?); `
-	result, err := db.Exec(qry, *shardPtr.IPAddress,
-		*shardPtr.ClusterID,
+	fmt.Println("EREEREREWRWERWERWEREWR")
+	qry := `INSERT INTO database_shards  (ip_address, port, user_name, password, database_name) VALUES (?,?,?,?,?); `
+	result, err := db.ExecContext(context.Background(), qry, *shardPtr.IPAddress,
 		*shardPtr.Port,
 		*shardPtr.UserName,
 		*shardPtr.Password,
 		*shardPtr.DatabaseName)
 	if err != nil {
+		fmt.Println("error")
 		return 0, errorlib.NewInternalServerError(err.Error())
 	}
+	fmt.Println("ASDASDASDs")
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, errorlib.NewInternalServerError(err.Error())
@@ -59,9 +63,7 @@ func (repository *DatabaseShardRepositoryImpl) FindShardsByClusterID(clusterID i
     		port, 
     		user_name, 
     		password, 
-    		database_name, 
-    		created_at,
-    		updated_at FROM database_shards A WHERE A.cluster_id = ? ORDER BY A.id ASC;`
+    		database_name FROM database_shards A WHERE A.cluster_id = ? ORDER BY A.id ASC;`
 	rows, err := db.Query(qry, clusterID)
 	if err != nil {
 		return nil, errorlib.NewInternalServerError(err.Error())
@@ -75,9 +77,7 @@ func (repository *DatabaseShardRepositoryImpl) FindShardsByClusterID(clusterID i
 			&shard.Port,
 			&shard.UserName,
 			&shard.Password,
-			&shard.DatabaseName,
-			&shard.CreatedAt,
-			&shard.UpdatedAt)
+			&shard.DatabaseName)
 		if err != nil {
 			return nil, errorlib.NewInternalServerError(err.Error())
 		}

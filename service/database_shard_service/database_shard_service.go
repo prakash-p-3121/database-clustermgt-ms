@@ -6,6 +6,6 @@ import (
 )
 
 type DatabaseShardService interface {
-	CreateShard(shard *model.DatabaseShard) (int64, errorlib.AppError)
+	CreateShard(shard *model.DatabaseShardCreateReq) (int64, errorlib.AppError)
 	FindShardByID(id int64) (*model.DatabaseShard, errorlib.AppError)
 }

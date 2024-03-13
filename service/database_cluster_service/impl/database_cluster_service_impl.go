@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"fmt"
 	model "github.com/prakash-p-3121/database-clustermgt-model"
 	"github.com/prakash-p-3121/database-clustermgt-ms/repository/database_cluster_repository"
 	"github.com/prakash-p-3121/errorlib"
@@ -10,10 +11,18 @@ type DatabaseClusterServiceImpl struct {
 	DatabaseClusterRepository database_cluster_repository.DatabaseClusterRepository
 }
 
-func (service *DatabaseClusterServiceImpl) CreateCluster(tableName string,
-	shardList []*model.DatabaseShard) (*model.DatabaseCluster, errorlib.AppError) {
+func (service *DatabaseClusterServiceImpl) CreateCluster(req *model.DatabaseClusterCreateReq) (*model.DatabaseCluster, errorlib.AppError) {
+	if req == nil {
+		badReqErr := errorlib.NewBadReqError("req-null")
+		return nil, badReqErr
+	}
+	appErr := req.Validate()
+	if appErr != nil {
+		return nil, appErr
+	}
+	fmt.Println("asdasdasddsaTEST")
 	clusterRepo := service.DatabaseClusterRepository
-	return clusterRepo.CreateCluster(tableName, shardList)
+	return clusterRepo.CreateCluster(*req.TableName, req.ShardIDList)
 }
 
 func (service *DatabaseClusterServiceImpl) ReadClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError) {

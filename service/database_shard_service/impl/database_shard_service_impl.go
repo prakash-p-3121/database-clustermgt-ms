@@ -10,7 +10,7 @@ type DatabaseShardServiceImpl struct {
 	DatabaseShardRepository database_shard_repository.DatabaseShardRepository
 }
 
-func (service *DatabaseShardServiceImpl) CreateShard(shard *model.DatabaseShard) (int64, errorlib.AppError) {
+func (service *DatabaseShardServiceImpl) CreateShard(shard *model.DatabaseShardCreateReq) (int64, errorlib.AppError) {
 	return service.DatabaseShardRepository.CreateShard(shard)
 }
 

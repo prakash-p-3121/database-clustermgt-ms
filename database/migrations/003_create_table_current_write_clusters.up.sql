@@ -1,0 +1,6 @@
+CREATE TABLE current_write_database_clusters (
+    table_name TEXT NOT NULL PRIMARY KEY,
+    cluster_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
