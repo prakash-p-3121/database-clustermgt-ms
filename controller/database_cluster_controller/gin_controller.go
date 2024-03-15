@@ -5,10 +5,10 @@ import (
 	"github.com/prakash-p-3121/restlib"
 )
 
-func FindCurrentWriteShard(ctx *gin.Context) {
+func FindShard(ctx *gin.Context) {
 	ginRestCtx := restlib.NewGinRestContext(ctx)
 	controller := NewDatabaseClusterController()
-	controller.FindCurrentWriteShard(ginRestCtx)
+	controller.FindShard(ginRestCtx)
 }
 
 func CreateCluster(ctx *gin.Context) {

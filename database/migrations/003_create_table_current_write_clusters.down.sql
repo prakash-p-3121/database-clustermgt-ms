@@ -1,1 +1,0 @@
-DROP TABLE current_write_database_clusters;

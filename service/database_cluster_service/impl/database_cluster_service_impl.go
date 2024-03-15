@@ -29,15 +29,15 @@ func (service *DatabaseClusterServiceImpl) ReadClusterByID(id int64) (*model.Dat
 	return clusterRepo.FindClusterByID(id)
 }
 
-func (service *DatabaseClusterServiceImpl) FindCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
+func (service *DatabaseClusterServiceImpl) FindClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
 	clusterRepo := service.DatabaseClusterRepository
-	return clusterRepo.FindCurrentWriteClusterByTableName(tableName)
+	return clusterRepo.FindClusterByTableName(tableName)
 }
 
-func (service *DatabaseClusterServiceImpl) FindCurrentWriteShardByTableName(tableName string,
+func (service *DatabaseClusterServiceImpl) FindShard(tableName string,
 	id string) (*model.DatabaseShard, errorlib.AppError) {
 	clusterRepo := service.DatabaseClusterRepository
-	return clusterRepo.FindCurrentWriteShardByTableName(tableName, id)
+	return clusterRepo.FindShard(tableName, id)
 }
 
 func (service *DatabaseClusterServiceImpl) FindAllShardsByTable(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {

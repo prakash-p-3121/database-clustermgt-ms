@@ -5,6 +5,7 @@ import (
 	"github.com/prakash-p-3121/database-clustermgt-ms/service/database_cluster_service"
 	"github.com/prakash-p-3121/errorlib"
 	"github.com/prakash-p-3121/restlib"
+	"log"
 	"strings"
 )
 
@@ -37,7 +38,7 @@ func (controller *DatabaseClusterControllerImpl) CreateCluster(restCtx restlib.R
 	restlib.OkResponse(ctx, *clusterPtr)
 }
 
-func (controller *DatabaseClusterControllerImpl) FindCurrentWriteShard(restCtx restlib.RestContext) {
+func (controller *DatabaseClusterControllerImpl) FindShard(restCtx restlib.RestContext) {
 	ginRestCtx, ok := restCtx.(*restlib.GinRestContext)
 	if !ok {
 		internalServerErr := errorlib.NewInternalServerError("Expected GinRestContext")
@@ -60,8 +61,9 @@ func (controller *DatabaseClusterControllerImpl) FindCurrentWriteShard(restCtx r
 		return
 	}
 
-	shardPtr, appErr := controller.DatabaseClusterService.FindCurrentWriteShardByTableName(tableName, id)
+	shardPtr, appErr := controller.DatabaseClusterService.FindShard(tableName, id)
 	if appErr != nil {
+		log.Println("FindCurrentWriteShardByTableName Err")
 		appErr.SendRestResponse(ctx)
 		return
 	}

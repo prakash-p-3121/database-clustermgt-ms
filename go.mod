@@ -4,10 +4,10 @@ go 1.22.1
 
 require (
 	github.com/gin-gonic/gin v1.9.1
-	github.com/prakash-p-3121/database-clustermgt-model v0.0.6
+	github.com/prakash-p-3121/database-clustermgt-model v0.0.7
 	github.com/prakash-p-3121/errorlib v0.0.7
 	github.com/prakash-p-3121/mysqllib v0.0.12
-	github.com/prakash-p-3121/restlib v0.0.5
+	github.com/prakash-p-3121/restlib v0.0.9
 )
 
 require (

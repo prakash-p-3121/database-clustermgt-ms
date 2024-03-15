@@ -2,7 +2,6 @@ package impl
 
 import (
 	"context"
-	"crypto/md5"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -10,6 +9,8 @@ import (
 	shardRepo "github.com/prakash-p-3121/database-clustermgt-ms/repository/database_shard_repository"
 	"github.com/prakash-p-3121/errorlib"
 	"github.com/prakash-p-3121/mysqllib"
+	"log"
+	"math/big"
 	"strconv"
 	"time"
 )
@@ -39,10 +40,9 @@ func (repository *DatabaseClusterRepositoryImpl) CreateCluster(tableName string,
 
 func (repository *DatabaseClusterRepositoryImpl) createCluster(tx *sql.Tx, tableName string,
 	shardIDList []int64) (*model.DatabaseCluster, error) {
-	shardSize := int64(len(shardIDList))
 	createdAt := time.Now().UTC()
-	qry := `INSERT INTO database_clusters (table_name, shard_size, created_at, updated_at) VALUES (?, ?, ?, ?);`
-	result, err := tx.Exec(qry, tableName, shardSize, createdAt, createdAt)
+	qry := `INSERT INTO database_clusters (table_name, created_at, updated_at) VALUES (?, ?, ?);`
+	result, err := tx.Exec(qry, tableName, createdAt, createdAt)
 	if err != nil {
 		return nil, err
 	}
@@ -50,24 +50,16 @@ func (repository *DatabaseClusterRepositoryImpl) createCluster(tx *sql.Tx, table
 	if err != nil {
 		return nil, err
 	}
-	clusterPtr := &model.DatabaseCluster{ID: &clusterID, TableName: &tableName, ShardSize: &shardSize, CreatedAt: createdAt, UpdatedAt: createdAt}
-	err = repository.createClusterToShardRelationship(tx, clusterPtr, shardIDList)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("ASASDASD")
-	qry = `INSERT INTO current_write_database_clusters (table_name, cluster_id) VALUES (?,?) ON DUPLICATE KEY UPDATE 
-    	   cluster_id=VALUES(cluster_id);`
-	_, err = tx.Exec(qry, tableName, clusterID)
+	clusterPtr := &model.DatabaseCluster{ID: &clusterID, TableName: &tableName, CreatedAt: createdAt, UpdatedAt: createdAt}
+	err = repository.updateClusterToShardRelationship(tx, clusterPtr, shardIDList)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println("RFASDASD")
-
 	return clusterPtr, nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) createClusterToShardRelationship(tx *sql.Tx,
+func (repository *DatabaseClusterRepositoryImpl) updateClusterToShardRelationship(tx *sql.Tx,
 	clusterPtr *model.DatabaseCluster,
 	shardIDList []int64) error {
 
@@ -83,11 +75,11 @@ func (repository *DatabaseClusterRepositoryImpl) createClusterToShardRelationshi
 
 func (repository *DatabaseClusterRepositoryImpl) FindClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
-	qry := `SELECT id, table_name, shard_size FROM database_clusters where id=?;`
+	qry := `SELECT id, table_name FROM database_clusters where id=?;`
 	row := db.QueryRow(qry, id)
 	var cluster model.DatabaseCluster
 	fmt.Println("find cluster by id")
-	err := row.Scan(&cluster.ID, &cluster.TableName, &cluster.ShardSize)
+	err := row.Scan(&cluster.ID, &cluster.TableName)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errorlib.NewNotFoundError("cluster-id-not-found")
 	}
@@ -100,14 +92,15 @@ func (repository *DatabaseClusterRepositoryImpl) FindClusterByID(id int64) (*mod
 	return &cluster, nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
+func (repository *DatabaseClusterRepositoryImpl) FindClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
 	fmt.Println("find write -cluster by table name")
-	qry := `SELECT A.id, A.table_name, A.shard_size  FROM database_clusters A INNER JOIN current_write_database_clusters B ON B.table_name = ? AND B.cluster_id = A.id ;`
+	qry := `SELECT A.id, A.table_name  FROM database_clusters A WHERE A.table_name=?;`
 	row := db.QueryRow(qry, tableName)
 	var cluster model.DatabaseCluster
-	err := row.Scan(&cluster.ID, &cluster.TableName, &cluster.ShardSize)
+	err := row.Scan(&cluster.ID, &cluster.TableName)
 	if errors.Is(err, sql.ErrNoRows) {
+		log.Println("NotFound error")
 		return nil, errorlib.NewNotFoundError("write-cluster-not-found-for-tableName=" + tableName)
 	}
 	if err != nil {
@@ -117,51 +110,70 @@ func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteClusterByTableN
 	return &cluster, nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) FindCurrentWriteShardByTableName(tableName string,
+func (repository *DatabaseClusterRepositoryImpl) FindShard(tableName string,
 	id string) (*model.DatabaseShard, errorlib.AppError) {
-	cluster, err := repository.FindCurrentWriteClusterByTableName(tableName)
-	if err != nil {
-		return nil, err
+	cluster, appErr := repository.FindClusterByTableName(tableName)
+	if appErr != nil {
+		log.Println("Find Write Cluster By Table Name")
+		return nil, appErr
 	}
 	shardRepoInst := shardRepo.NewDatabaseShardRepository(repository.DatabaseConnection)
-	shardList, err := shardRepoInst.FindShardsByClusterID(*cluster.ID)
-	if err != nil {
+	shardList, appErr := shardRepoInst.FindShardsByClusterID(*cluster.ID)
+	if appErr != nil {
 		fmt.Println("find-shards-by-cluster-id")
-		return nil, err
+		return nil, appErr
 	}
+	log.Println("shard-len-check")
 	if len(shardList) == 0 {
 		return nil, errorlib.NewNotFoundError("shards-not-found-for-cluster_id=" + strconv.FormatInt(*cluster.ID, 10))
 	}
 	fmt.Println("find-current-write-shard-by-table-name")
-	shard, err := repository.FindWriteShard(shardList, id)
-	if err != nil {
-		return nil, err
+	shard, appErr := repository.findShard(shardList, id)
+	if appErr != nil {
+		return nil, appErr
 	}
 	return shard, nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) FindWriteShard(shardList []*model.DatabaseShard, id string) (*model.DatabaseShard, errorlib.AppError) {
-	md5HashInt64 := repository.computeMD5Hash(id)
-	shardNo := int(md5HashInt64 % int64(len(shardList)))
-	return shardList[shardNo], nil
-}
-
-func (repository *DatabaseClusterRepositoryImpl) computeMD5Hash(id string) int64 {
-	hash := md5.Sum([]byte(id))
-
-	var hashInt64 int64
-	for i := range hash {
-		hashInt64 = (hashInt64 << 8) | int64(hash[i])
+func (repository *DatabaseClusterRepositoryImpl) findShard(shardList []*model.DatabaseShard, id string) (*model.DatabaseShard, errorlib.AppError) {
+	decimalBase := 10
+	idBigInt := new(big.Int)
+	idBigInt, ok := idBigInt.SetString(id, decimalBase)
+	if !ok {
+		return nil, errorlib.NewInternalServerError("database-shard-not-found")
 	}
-
-	if hashInt64 < 0 {
-		hashInt64 = -hashInt64
+	for _, shardPtr := range shardList {
+		log.Println("shardID=", *shardPtr.ID)
+		startRangeBigInt, ok := new(big.Int).SetString(*shardPtr.StartRange, decimalBase)
+		if !ok {
+			return nil, errorlib.NewInternalServerError("start-range-invalid")
+		}
+		var endRangeBigInt *big.Int
+		if shardPtr.EndRange != nil {
+			endRangeBigInt, ok = new(big.Int).SetString(*shardPtr.EndRange, decimalBase)
+			if !ok {
+				return nil, errorlib.NewInternalServerError("start-range-invalid")
+			}
+		}
+		startRangeCmpRes := startRangeBigInt.Cmp(idBigInt)
+		log.Println("start-range-cmp-res=", startRangeCmpRes)
+		if endRangeBigInt != nil {
+			endRangeCmpRes := endRangeBigInt.Cmp(idBigInt)
+			log.Println("end-range-cmp-res=", endRangeCmpRes)
+			if (startRangeCmpRes == -1 || startRangeCmpRes == 0) && (endRangeCmpRes == 1 || endRangeCmpRes == 0) {
+				return shardPtr, nil
+			}
+		} else {
+			if startRangeCmpRes == -1 || startRangeCmpRes == 0 {
+				return shardPtr, nil
+			}
+		}
 	}
-	return hashInt64
+	return nil, errorlib.NewInternalServerError("shard-not-found-for-id=" + id)
 }
 
 func (repository *DatabaseClusterRepositoryImpl) FindAllShardsByTable(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {
-	qry := `SELECT A.id, A.ip_address, A.cluster_id, A.port, A.user_name, A.password, A.database_name  FROM database_shards A 
+	qry := `SELECT A.id, A.ip_address, A.cluster_id, A.port, A.user_name, A.password, A.database_name, A.start_range, A.end_range  FROM database_shards A 
 				INNER JOIN database_clusters B ON B.table_name = ? AND A.cluster_id = B.id ORDER BY A.id ASC;
            `
 	db := repository.DatabaseConnection
@@ -180,6 +192,8 @@ func (repository *DatabaseClusterRepositoryImpl) FindAllShardsByTable(tableName 
 			&shard.UserName,
 			&shard.Password,
 			&shard.DatabaseName,
+			&shard.StartRange,
+			&shard.EndRange,
 		)
 		if err != nil {
 			return nil, errorlib.NewInternalServerError(err.Error())

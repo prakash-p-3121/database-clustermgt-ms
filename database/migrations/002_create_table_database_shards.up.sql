@@ -6,7 +6,9 @@ CREATE TABLE database_shards (
    user_name TEXT NOT NULL,
    password TEXT NOT NULL,
    database_name TEXT NOT NULL,
+   start_range TEXT NOT NULL,
+   end_range TEXT DEFAULT NULL,
    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-   INDEX cluster_id_idx (cluster_id)
+   INDEX database_shards_cluster_id_idx (cluster_id)
 );

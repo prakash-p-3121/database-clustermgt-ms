@@ -8,7 +8,7 @@ import (
 type DatabaseClusterService interface {
 	CreateCluster(req *model.DatabaseClusterCreateReq) (*model.DatabaseCluster, errorlib.AppError)
 	ReadClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError)
-	FindCurrentWriteClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError)
-	FindCurrentWriteShardByTableName(tableName string, id string) (*model.DatabaseShard, errorlib.AppError)
+	FindClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError)
+	FindShard(tableName string, id string) (*model.DatabaseShard, errorlib.AppError)
 	FindAllShardsByTable(tableName string) ([]*model.DatabaseShard, errorlib.AppError)
 }

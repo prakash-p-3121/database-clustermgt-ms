@@ -16,18 +16,19 @@ type DatabaseShardRepositoryImpl struct {
 
 func (repository *DatabaseShardRepositoryImpl) CreateShard(shardPtr *model.DatabaseShardCreateReq) (int64, errorlib.AppError) {
 	db := repository.DatabaseConnection
-	fmt.Println("EREEREREWRWERWERWEREWR")
-	qry := `INSERT INTO database_shards  (ip_address, port, user_name, password, database_name) VALUES (?,?,?,?,?); `
+	qry := `INSERT INTO database_shards  (ip_address, port, user_name, password, database_name, start_range, end_range) VALUES (?,?,?,?,?,?,?); `
 	result, err := db.ExecContext(context.Background(), qry, *shardPtr.IPAddress,
 		*shardPtr.Port,
 		*shardPtr.UserName,
 		*shardPtr.Password,
-		*shardPtr.DatabaseName)
+		*shardPtr.DatabaseName,
+		*shardPtr.StartRange,
+		shardPtr.EndRange,
+	)
 	if err != nil {
 		fmt.Println("error")
 		return 0, errorlib.NewInternalServerError(err.Error())
 	}
-	fmt.Println("ASDASDASDs")
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, errorlib.NewInternalServerError(err.Error())
@@ -37,7 +38,7 @@ func (repository *DatabaseShardRepositoryImpl) CreateShard(shardPtr *model.Datab
 
 func (repository *DatabaseShardRepositoryImpl) FindShardByID(id int64) (*model.DatabaseShard, errorlib.AppError) {
 	db := repository.DatabaseConnection
-	qry := `SELECT ip_address, cluster_id, port, user_name, password, database_name from database_shards WHERE id=?;`
+	qry := `SELECT ip_address, cluster_id, port, user_name, password, database_name, start_range, end_range from database_shards WHERE id=?;`
 	row := db.QueryRow(qry, id)
 	var shard model.DatabaseShard
 	err := row.Scan(&shard.IPAddress,
@@ -45,7 +46,9 @@ func (repository *DatabaseShardRepositoryImpl) FindShardByID(id int64) (*model.D
 		&shard.Port,
 		&shard.UserName,
 		&shard.Password,
-		&shard.DatabaseName)
+		&shard.DatabaseName,
+		&shard.StartRange,
+		&shard.EndRange)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errorlib.NewNotFoundError("shard-info-not-found-for" + strconv.FormatInt(id, 10))
 	}
@@ -63,7 +66,9 @@ func (repository *DatabaseShardRepositoryImpl) FindShardsByClusterID(clusterID i
     		port, 
     		user_name, 
     		password, 
-    		database_name FROM database_shards A WHERE A.cluster_id = ? ORDER BY A.id ASC;`
+    		database_name,
+    		start_range,
+    		end_range FROM database_shards A WHERE A.cluster_id = ? ORDER BY A.id ASC;`
 	rows, err := db.Query(qry, clusterID)
 	if err != nil {
 		return nil, errorlib.NewInternalServerError(err.Error())
@@ -77,7 +82,10 @@ func (repository *DatabaseShardRepositoryImpl) FindShardsByClusterID(clusterID i
 			&shard.Port,
 			&shard.UserName,
 			&shard.Password,
-			&shard.DatabaseName)
+			&shard.DatabaseName,
+			&shard.StartRange,
+			&shard.EndRange,
+		)
 		if err != nil {
 			return nil, errorlib.NewInternalServerError(err.Error())
 		}
