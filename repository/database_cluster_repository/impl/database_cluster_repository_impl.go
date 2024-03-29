@@ -20,6 +20,7 @@ type DatabaseClusterRepositoryImpl struct {
 }
 
 func (repository *DatabaseClusterRepositoryImpl) CreateCluster(tableName string,
+	shardingType uint8,
 	shardIDList []int64) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
 	ctx := context.Background()
@@ -27,7 +28,7 @@ func (repository *DatabaseClusterRepositoryImpl) CreateCluster(tableName string,
 	if err != nil {
 		return nil, errorlib.NewInternalServerError(err.Error())
 	}
-	cluster, err := repository.createCluster(tx, tableName, shardIDList)
+	cluster, err := repository.createCluster(tx, tableName, shardingType, shardIDList)
 	if err != nil {
 		return nil, errorlib.NewInternalServerError(mysqllib.RollbackTx(tx, err).Error())
 	}
@@ -39,10 +40,11 @@ func (repository *DatabaseClusterRepositoryImpl) CreateCluster(tableName string,
 }
 
 func (repository *DatabaseClusterRepositoryImpl) createCluster(tx *sql.Tx, tableName string,
+	shardingType uint8,
 	shardIDList []int64) (*model.DatabaseCluster, error) {
 	createdAt := time.Now().UTC()
-	qry := `INSERT INTO database_clusters (table_name, created_at, updated_at) VALUES (?, ?, ?);`
-	result, err := tx.Exec(qry, tableName, createdAt, createdAt)
+	qry := `INSERT INTO database_clusters (table_name, sharding_type, created_at, updated_at) VALUES (?, ?, ?,  ?);`
+	result, err := tx.Exec(qry, tableName, shardingType, createdAt, createdAt)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,6 @@ func (repository *DatabaseClusterRepositoryImpl) createCluster(tx *sql.Tx, table
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("RFASDASD")
 	return clusterPtr, nil
 }
 
@@ -75,17 +76,15 @@ func (repository *DatabaseClusterRepositoryImpl) updateClusterToShardRelationshi
 
 func (repository *DatabaseClusterRepositoryImpl) FindClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
-	qry := `SELECT id, table_name FROM database_clusters where id=?;`
+	qry := `SELECT id, table_name, sharding_type FROM database_clusters where id=?;`
 	row := db.QueryRow(qry, id)
 	var cluster model.DatabaseCluster
 	fmt.Println("find cluster by id")
-	err := row.Scan(&cluster.ID, &cluster.TableName)
+	err := row.Scan(&cluster.ID, &cluster.TableName, &cluster.ShardingType)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errorlib.NewNotFoundError("cluster-id-not-found")
 	}
 	if err != nil {
-
-		fmt.Println("ASDASDASDASDSA")
 		return nil, errorlib.NewInternalServerError(err.Error())
 	}
 	fmt.Println("find cluster by id")
@@ -95,22 +94,21 @@ func (repository *DatabaseClusterRepositoryImpl) FindClusterByID(id int64) (*mod
 func (repository *DatabaseClusterRepositoryImpl) FindClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError) {
 	db := repository.DatabaseConnection
 	fmt.Println("find write -cluster by table name")
-	qry := `SELECT A.id, A.table_name  FROM database_clusters A WHERE A.table_name=?;`
+	qry := `SELECT A.id, A.table_name, A.sharding_type FROM database_clusters A WHERE A.table_name=?;`
 	row := db.QueryRow(qry, tableName)
 	var cluster model.DatabaseCluster
-	err := row.Scan(&cluster.ID, &cluster.TableName)
+	err := row.Scan(&cluster.ID, &cluster.TableName, &cluster.ShardingType)
 	if errors.Is(err, sql.ErrNoRows) {
 		log.Println("NotFound error")
 		return nil, errorlib.NewNotFoundError("write-cluster-not-found-for-tableName=" + tableName)
 	}
 	if err != nil {
-		fmt.Println("AASDASD")
 		return nil, errorlib.NewInternalServerError(err.Error())
 	}
 	return &cluster, nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) FindShard(tableName string,
+func (repository *DatabaseClusterRepositoryImpl) FindShardByNumber(tableName string,
 	id string) (*model.DatabaseShard, errorlib.AppError) {
 	cluster, appErr := repository.FindClusterByTableName(tableName)
 	if appErr != nil {
@@ -128,31 +126,31 @@ func (repository *DatabaseClusterRepositoryImpl) FindShard(tableName string,
 		return nil, errorlib.NewNotFoundError("shards-not-found-for-cluster_id=" + strconv.FormatInt(*cluster.ID, 10))
 	}
 	fmt.Println("find-current-write-shard-by-table-name")
-	shard, appErr := repository.findShard(shardList, id)
+	shard, appErr := repository.findShardByNumber(shardList, id)
 	if appErr != nil {
 		return nil, appErr
 	}
 	return shard, nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) findShard(shardList []*model.DatabaseShard, id string) (*model.DatabaseShard, errorlib.AppError) {
+func (repository *DatabaseClusterRepositoryImpl) findShardByNumber(shardList []*model.DatabaseShard, id string) (*model.DatabaseShard, errorlib.AppError) {
 	decimalBase := 10
 	idBigInt := new(big.Int)
 	idBigInt, ok := idBigInt.SetString(id, decimalBase)
 	if !ok {
-		return nil, errorlib.NewInternalServerError("database-shard-not-found")
+		return nil, errorlib.NewNotFoundError("database-shard-not-found-id-invalid")
 	}
 	for _, shardPtr := range shardList {
 		log.Println("shardID=", *shardPtr.ID)
 		startRangeBigInt, ok := new(big.Int).SetString(*shardPtr.StartRange, decimalBase)
 		if !ok {
-			return nil, errorlib.NewInternalServerError("start-range-invalid")
+			return nil, errorlib.NewNotFoundError("start-range-invalid")
 		}
 		var endRangeBigInt *big.Int
 		if shardPtr.EndRange != nil {
 			endRangeBigInt, ok = new(big.Int).SetString(*shardPtr.EndRange, decimalBase)
 			if !ok {
-				return nil, errorlib.NewInternalServerError("start-range-invalid")
+				return nil, errorlib.NewNotFoundError("start-range-invalid")
 			}
 		}
 		startRangeCmpRes := startRangeBigInt.Cmp(idBigInt)
@@ -169,7 +167,54 @@ func (repository *DatabaseClusterRepositoryImpl) findShard(shardList []*model.Da
 			}
 		}
 	}
-	return nil, errorlib.NewInternalServerError("shard-not-found-for-id=" + id)
+	return nil, errorlib.NewNotFoundError("shard-not-found-for-id=" + id)
+}
+
+func (repository *DatabaseClusterRepositoryImpl) FindShardByChar(tableName string,
+	id rune) (*model.DatabaseShard, errorlib.AppError) {
+	cluster, appErr := repository.FindClusterByTableName(tableName)
+	if appErr != nil {
+		log.Println("Find Write Cluster By Table Name")
+		return nil, appErr
+	}
+	shardRepoInst := shardRepo.NewDatabaseShardRepository(repository.DatabaseConnection)
+	shardList, appErr := shardRepoInst.FindShardsByClusterID(*cluster.ID)
+	if appErr != nil {
+		fmt.Println("find-shards-by-cluster-id")
+		return nil, appErr
+	}
+	log.Println("shard-len-check")
+	if len(shardList) == 0 {
+		return nil, errorlib.NewNotFoundError("shards-not-found-for-cluster_id=" + strconv.FormatInt(*cluster.ID, 10))
+	}
+	fmt.Println("find-current-write-shard-by-table-name")
+	shard, appErr := repository.findShardByChar(shardList, id)
+	if appErr != nil {
+		return nil, appErr
+	}
+	return shard, nil
+}
+
+func (repository *DatabaseClusterRepositoryImpl) findShardByChar(shardList []*model.DatabaseShard, id rune) (*model.DatabaseShard, errorlib.AppError) {
+	for _, shardPtr := range shardList {
+		log.Println("shardID=", *shardPtr.ID)
+		startRange := *shardPtr.StartRange
+		endRange := *shardPtr.EndRange
+		startChar := []rune(startRange)[0]
+		endChar := []rune(endRange)[0]
+
+		if shardPtr.EndRange != nil {
+			if id >= startChar && id <= endChar {
+				return shardPtr, nil
+			}
+		} else {
+			if id >= startChar {
+				return shardPtr, nil
+			}
+		}
+
+	}
+	return nil, errorlib.NewNotFoundError("shard-not-found-for-id=" + string(id))
 }
 
 func (repository *DatabaseClusterRepositoryImpl) FindAllShardsByTable(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {

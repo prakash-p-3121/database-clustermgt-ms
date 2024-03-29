@@ -6,6 +6,7 @@ import (
 	"github.com/prakash-p-3121/errorlib"
 	"github.com/prakash-p-3121/restlib"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -54,6 +55,13 @@ func (controller *DatabaseClusterControllerImpl) FindShard(restCtx restlib.RestC
 		return
 	}
 
+	strIsByNumber := ctx.Query("is-by-number")
+	if len(strings.TrimSpace(strIsByNumber)) == 0 {
+		badReqErr := errorlib.NewBadReqError("is-by-number-empty")
+		badReqErr.SendRestResponse(ctx)
+		return
+	}
+
 	id := ctx.Query("resource-id")
 	if len(strings.TrimSpace(id)) == 0 {
 		badReqErr := errorlib.NewBadReqError("resource-id-empty")
@@ -61,7 +69,20 @@ func (controller *DatabaseClusterControllerImpl) FindShard(restCtx restlib.RestC
 		return
 	}
 
-	shardPtr, appErr := controller.DatabaseClusterService.FindShard(tableName, id)
+	isByNumber, err := strconv.ParseBool(strIsByNumber)
+	if err != nil {
+		badReqErr := errorlib.NewBadReqError("is-by-number-err=" + err.Error())
+		badReqErr.SendRestResponse(ctx)
+		return
+	}
+
+	var shardPtr *model.DatabaseShard
+	var appErr errorlib.AppError
+	if isByNumber {
+		shardPtr, appErr = controller.DatabaseClusterService.FindShardByNumber(tableName, id)
+	} else {
+		shardPtr, appErr = controller.DatabaseClusterService.FindShardByChar(tableName, []rune(id)[0])
+	}
 	if appErr != nil {
 		log.Println("FindCurrentWriteShardByTableName Err")
 		appErr.SendRestResponse(ctx)

@@ -21,7 +21,7 @@ func (service *DatabaseClusterServiceImpl) CreateCluster(req *model.DatabaseClus
 	}
 
 	clusterRepo := service.DatabaseClusterRepository
-	return clusterRepo.CreateCluster(*req.TableName, req.ShardIDList)
+	return clusterRepo.CreateCluster(*req.TableName, *req.ShardingType, req.ShardIDList)
 }
 
 func (service *DatabaseClusterServiceImpl) ReadClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError) {
@@ -34,10 +34,16 @@ func (service *DatabaseClusterServiceImpl) FindClusterByTableName(tableName stri
 	return clusterRepo.FindClusterByTableName(tableName)
 }
 
-func (service *DatabaseClusterServiceImpl) FindShard(tableName string,
+func (service *DatabaseClusterServiceImpl) FindShardByNumber(tableName string,
 	id string) (*model.DatabaseShard, errorlib.AppError) {
 	clusterRepo := service.DatabaseClusterRepository
-	return clusterRepo.FindShard(tableName, id)
+	return clusterRepo.FindShardByNumber(tableName, id)
+}
+
+func (service *DatabaseClusterServiceImpl) FindShardByChar(tableName string,
+	id rune) (*model.DatabaseShard, errorlib.AppError) {
+	clusterRepo := service.DatabaseClusterRepository
+	return clusterRepo.FindShardByChar(tableName, id)
 }
 
 func (service *DatabaseClusterServiceImpl) FindAllShardsByTable(tableName string) ([]*model.DatabaseShard, errorlib.AppError) {
