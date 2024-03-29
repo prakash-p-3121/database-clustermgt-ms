@@ -6,7 +6,6 @@ import (
 	"github.com/prakash-p-3121/errorlib"
 	"github.com/prakash-p-3121/restlib"
 	"log"
-	"strconv"
 	"strings"
 )
 
@@ -69,20 +68,9 @@ func (controller *DatabaseClusterControllerImpl) FindShard(restCtx restlib.RestC
 		return
 	}
 
-	isByNumber, err := strconv.ParseBool(strIsByNumber)
-	if err != nil {
-		badReqErr := errorlib.NewBadReqError("is-by-number-err=" + err.Error())
-		badReqErr.SendRestResponse(ctx)
-		return
-	}
-
 	var shardPtr *model.DatabaseShard
 	var appErr errorlib.AppError
-	if isByNumber {
-		shardPtr, appErr = controller.DatabaseClusterService.FindShardByNumber(tableName, id)
-	} else {
-		shardPtr, appErr = controller.DatabaseClusterService.FindShardByChar(tableName, []rune(id)[0])
-	}
+	shardPtr, appErr = controller.DatabaseClusterService.FindShard(tableName, id)
 	if appErr != nil {
 		log.Println("FindCurrentWriteShardByTableName Err")
 		appErr.SendRestResponse(ctx)

@@ -108,7 +108,7 @@ func (repository *DatabaseClusterRepositoryImpl) FindClusterByTableName(tableNam
 	return &cluster, nil
 }
 
-func (repository *DatabaseClusterRepositoryImpl) FindShardByNumber(tableName string,
+func (repository *DatabaseClusterRepositoryImpl) FindShard(tableName string,
 	id string) (*model.DatabaseShard, errorlib.AppError) {
 	cluster, appErr := repository.FindClusterByTableName(tableName)
 	if appErr != nil {
@@ -126,11 +126,21 @@ func (repository *DatabaseClusterRepositoryImpl) FindShardByNumber(tableName str
 		return nil, errorlib.NewNotFoundError("shards-not-found-for-cluster_id=" + strconv.FormatInt(*cluster.ID, 10))
 	}
 	fmt.Println("find-current-write-shard-by-table-name")
-	shard, appErr := repository.findShardByNumber(shardList, id)
-	if appErr != nil {
-		return nil, appErr
+
+	if cluster.ShardingType == model.ShardingTypeByNumber {
+		shard, appErr := repository.findShardByNumber(shardList, id)
+		if appErr != nil {
+			return nil, appErr
+		}
+		return shard, nil
+	} else {
+		shard, appErr := repository.findShardByChar(shardList, id)
+		if appErr != nil {
+			return nil, appErr
+		}
+		return shard, nil
 	}
-	return shard, nil
+
 }
 
 func (repository *DatabaseClusterRepositoryImpl) findShardByNumber(shardList []*model.DatabaseShard, id string) (*model.DatabaseShard, errorlib.AppError) {
@@ -170,32 +180,8 @@ func (repository *DatabaseClusterRepositoryImpl) findShardByNumber(shardList []*
 	return nil, errorlib.NewNotFoundError("shard-not-found-for-id=" + id)
 }
 
-func (repository *DatabaseClusterRepositoryImpl) FindShardByChar(tableName string,
-	id rune) (*model.DatabaseShard, errorlib.AppError) {
-	cluster, appErr := repository.FindClusterByTableName(tableName)
-	if appErr != nil {
-		log.Println("Find Write Cluster By Table Name")
-		return nil, appErr
-	}
-	shardRepoInst := shardRepo.NewDatabaseShardRepository(repository.DatabaseConnection)
-	shardList, appErr := shardRepoInst.FindShardsByClusterID(*cluster.ID)
-	if appErr != nil {
-		fmt.Println("find-shards-by-cluster-id")
-		return nil, appErr
-	}
-	log.Println("shard-len-check")
-	if len(shardList) == 0 {
-		return nil, errorlib.NewNotFoundError("shards-not-found-for-cluster_id=" + strconv.FormatInt(*cluster.ID, 10))
-	}
-	fmt.Println("find-current-write-shard-by-table-name")
-	shard, appErr := repository.findShardByChar(shardList, id)
-	if appErr != nil {
-		return nil, appErr
-	}
-	return shard, nil
-}
-
-func (repository *DatabaseClusterRepositoryImpl) findShardByChar(shardList []*model.DatabaseShard, id rune) (*model.DatabaseShard, errorlib.AppError) {
+func (repository *DatabaseClusterRepositoryImpl) findShardByChar(shardList []*model.DatabaseShard, idStr string) (*model.DatabaseShard, errorlib.AppError) {
+	id := []rune(idStr)[0]
 	for _, shardPtr := range shardList {
 		log.Println("shardID=", *shardPtr.ID)
 		startRange := *shardPtr.StartRange
@@ -212,7 +198,6 @@ func (repository *DatabaseClusterRepositoryImpl) findShardByChar(shardList []*mo
 				return shardPtr, nil
 			}
 		}
-
 	}
 	return nil, errorlib.NewNotFoundError("shard-not-found-for-id=" + string(id))
 }

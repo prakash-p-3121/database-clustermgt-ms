@@ -9,7 +9,6 @@ type DatabaseClusterService interface {
 	CreateCluster(req *model.DatabaseClusterCreateReq) (*model.DatabaseCluster, errorlib.AppError)
 	ReadClusterByID(id int64) (*model.DatabaseCluster, errorlib.AppError)
 	FindClusterByTableName(tableName string) (*model.DatabaseCluster, errorlib.AppError)
-	FindShardByNumber(tableName string, id string) (*model.DatabaseShard, errorlib.AppError)
-	FindShardByChar(tableName string, startChar rune) (*model.DatabaseShard, errorlib.AppError)
+	FindShard(tableName string, id string) (*model.DatabaseShard, errorlib.AppError)
 	FindAllShardsByTable(tableName string) ([]*model.DatabaseShard, errorlib.AppError)
 }
