@@ -54,13 +54,6 @@ func (controller *DatabaseClusterControllerImpl) FindShard(restCtx restlib.RestC
 		return
 	}
 
-	strIsByNumber := ctx.Query("is-by-number")
-	if len(strings.TrimSpace(strIsByNumber)) == 0 {
-		badReqErr := errorlib.NewBadReqError("is-by-number-empty")
-		badReqErr.SendRestResponse(ctx)
-		return
-	}
-
 	id := ctx.Query("resource-id")
 	if len(strings.TrimSpace(id)) == 0 {
 		badReqErr := errorlib.NewBadReqError("resource-id-empty")
