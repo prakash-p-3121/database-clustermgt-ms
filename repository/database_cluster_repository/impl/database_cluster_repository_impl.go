@@ -12,6 +12,7 @@ import (
 	"log"
 	"math/big"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -140,7 +141,6 @@ func (repository *DatabaseClusterRepositoryImpl) FindShard(tableName string,
 		}
 		return shard, nil
 	}
-
 }
 
 func (repository *DatabaseClusterRepositoryImpl) findShardByNumber(shardList []*model.DatabaseShard, id string) (*model.DatabaseShard, errorlib.AppError) {
@@ -181,6 +181,7 @@ func (repository *DatabaseClusterRepositoryImpl) findShardByNumber(shardList []*
 }
 
 func (repository *DatabaseClusterRepositoryImpl) findShardByChar(shardList []*model.DatabaseShard, idStr string) (*model.DatabaseShard, errorlib.AppError) {
+	idStr = strings.ToLower(string(idStr[0]))
 	id := []rune(idStr)[0]
 	for _, shardPtr := range shardList {
 		log.Println("shardID=", *shardPtr.ID)

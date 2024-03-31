@@ -58,6 +58,8 @@ github.com/prakash-p-3121/database-clustermgt-model v0.0.9 h1:zAkwatkYiCH8LURRU6
 github.com/prakash-p-3121/database-clustermgt-model v0.0.9/go.mod h1:5xj6jFuege/cWqE1bOx8B0P4TkEk8DKLZRnEpUYNdU0=
 github.com/prakash-p-3121/database-clustermgt-model v0.1.0 h1:FWJN8XMkPr8ODlugPXj4dCgQau7T8kdauDvcaQu0S5E=
 github.com/prakash-p-3121/database-clustermgt-model v0.1.0/go.mod h1:5xj6jFuege/cWqE1bOx8B0P4TkEk8DKLZRnEpUYNdU0=
+github.com/prakash-p-3121/database-clustermgt-model v0.1.1 h1:38raINN4WaVqKVd4NqQrdBF7NVdQGVr/A7qTheNBc58=
+github.com/prakash-p-3121/database-clustermgt-model v0.1.1/go.mod h1:5xj6jFuege/cWqE1bOx8B0P4TkEk8DKLZRnEpUYNdU0=
 github.com/prakash-p-3121/errorlib v0.0.9 h1:FmXHkR1185LJBx6L/Nc70+CGQNBSgytmbEwyleSDInA=
 github.com/prakash-p-3121/errorlib v0.0.9/go.mod h1:9q5QI6qRlpLoHIvRLmQ58vYnj7bYt/qYoikNrRGzT/I=
 github.com/prakash-p-3121/mysqllib v0.0.12 h1:x8TKYtBVZt8JLjp6yfDTJQ725TM475zM8GSGJ9PeSXk=
