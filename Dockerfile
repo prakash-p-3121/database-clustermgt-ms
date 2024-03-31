@@ -18,6 +18,7 @@ WORKDIR /app
 RUN mkdir /app/conf
 # Copy binary and conf files
 COPY --from=builder /app/database-clustermgt-ms /app/database-clustermgt-ms
+RUN chmod 777 /app/database-clustermgt-ms
 COPY --from=builder /app/conf/database.toml /app/conf/database.toml
 
 
@@ -27,4 +28,4 @@ EXPOSE 3002
 
 
 # Define the command to run the application
-CMD ["database-clustermgt-ms"]
+CMD ["/app/database-clustermgt-ms"]
